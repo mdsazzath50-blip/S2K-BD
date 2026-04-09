@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2K BD - VIP Edition Pro</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --dark: #0f0c29;
+            --glass: rgba(255, 255, 255, 0.1);
+            --gold: #ffd700;
+            --vip1: #cd7f32; --vip2: #c0c0c0; --vip3: #ffd700; --vip4: #e5e4e2;
+            --vip5: #ff4757; --vip6: #2ed573; --vip7: #3742fa; --vip8: #ffa502;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body { 
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #0f0c29);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: white; 
+            overflow-x: hidden; 
+            height: 100vh; 
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f0c29; z-index: 5000; display: flex;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .app-container { max-width: 500px; margin: 0 auto; height: 100vh; display: none; flex-direction: column; position: relative; }
+        header { padding: 15px; text-align: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass); }
+
+        .screen { flex: 1; padding: 15px; overflow-y: auto; display: none; padding-bottom: 100px; }
+        .active-screen { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 15px; backdrop-filter: blur(15px); }
+        .balance-card { background: linear-gradient(135deg, var(--secondary), var(--primary)); text-align: center; }
+
+        .btn { background: linear-gradient(to right, var(--primary), var(--secondary)); border: none; padding: 12px; border-radius: 10px; color: white; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; margin: 5px 0; }
+        .btn:active { transform: scale(0.98); }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; width: auto; }
+
+        .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .task-card { background: rgba(255,255,255,0.05); border: 1px solid var(--glass); padding: 10px; border-radius: 12px; text-align: center; }
+        .task-card.completed { opacity: 0.5; pointer-events: none; border-color: #2ecc71; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--glass); z-index: 1000; }
+        .nav-item { color: #666; font-size: 1.1rem; cursor: pointer; text-align: center; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { display: block; font-size: 0.6rem; }
+
+        .vip-badge { padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .v1 { background: var(--vip1); color: white; } .v2 { background: var(--vip2); color: black; }
+        .v3 { background: var(--vip3); color: black; } .v4 { background: var(--vip4); color: black; }
+        .v5 { background: var(--vip5); color: white; } .v6 { background: var(--vip6); color: white; }
+        .v7 { background: var(--vip7); color: white; } .v8 { background: var(--vip8); color: black; }
+
+        .support-btn { position: fixed; bottom: 85px; right: 20px; width: 50px; height: 50px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; text-decoration: none; }
+
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--glass); background: rgba(0,0,0,0.2); color: white; outline: none; }
+        .wheel-container { position: relative; width: 180px; height: 180px; margin: 20px auto; border: 5px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 3s cubic-bezier(0.1, 0, 0.1, 1); }
+        .wheel-inner { width: 100%; height: 100%; background: conic-gradient(red 0deg 60deg, blue 60deg 120deg, green 120deg 180deg, orange 180deg 240deg, purple 240deg 300deg, gold 300deg 360deg); }
+        .micro-job-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 8px; border-left: 3px solid var(--primary); }
+        .expiry-text { font-size: 0.75rem; color: #ff4757; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-overlay">
+    <div class="card" style="width: 100%; max-width: 350px; text-align: center;">
+        <h2 style="color: var(--primary); margin-bottom: 15px;">C2K BD LOGIN</h2>
+        <input type="text" id="log-name" placeholder="Full Name">
+        <input type="number" id="log-phone" placeholder="Phone Number">
+        <button class="btn" onclick="app.login()">Login Now</button>
+    </div>
+</div>
+
+<!-- LIVE SUPPORT -->
+<a href="https://chat.whatsapp.com/ESFcTN66Tq10LheKq05MLe?mode=gi_t" target="_blank" class="support-btn">
+    <i class="fab fa-whatsapp"></i>
+</a>
+
+<div class="app-container" id="main-app">
+    <header><h1>C2K BD <span id="header-vip" class="vip-badge">BASIC</span></h1></header>
+
+    <!-- HOME -->
+    <div id="scr-home" class="screen active-screen">
+        <div class="card balance-card">
+            <p>Total Balance</p>
+            <h2 id="user-balance">0</h2>
+            <p>Taka (৳)</p>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <button class="btn" onclick="app.claimDaily()"><i class="fas fa-gift"></i> Daily Bonus</button>
+            <button class="btn" onclick="app.nav('games', this)"><i class="fas fa-gamepad"></i> Play & Earn</button>
+        </div>
+        
+        <div class="card">
+            <h3>Invite & Earn</h3>
+            <p style="font-size:0.75rem;">Refer code: <b id="ref-code-display" style="color:var(--primary)">00000</b></p>
+            <button class="btn btn-sm" onclick="app.nav('refer', this)">Invite Friends</button>
+        </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="scr-task" class="screen">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3>Earning Tasks</h3>
+            <span id="task-count" style="font-size: 0.8rem; color: var(--primary);">0/30 Done</span>
+        </div>
+        <div id="task-sections-nav" style="display: flex; gap:5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;"></div>
+        <div class="task-grid" id="task-container"></div>
+    </div>
+
+    <!-- GAMES -->
+    <div id="scr-games" class="screen">
+        <div class="card" style="text-align: center;">
+            <h3>Lucky Spin</h3>
+            <div class="wheel-container" id="wheel"><div class="wheel-inner"></div></div>
+            <button class="btn" onclick="app.spinWheel()">Spin Now</button>
+        </div>
+    </div>
+
+    <!-- WALLET -->
+    <div id="scr-wallet" class="screen">
+        <div class="card">
+            <h3>Withdraw</h3>
+            <p style="font-size:0.75rem; color: #00d2ff; margin-bottom: 10px;">সীমা: ৫০০৳ - ৫০,০০০৳</p>
+            <select id="wd-method">
+                <option value="Bkash">Bkash</option>
+                <option value="Nagad">Nagad</option>
+            </select>
+            <input type="text" id="wd-number" placeholder="Account Number">
+            <input type="number" id="wd-amount" placeholder="Amount (Taka)">
+            <button class="btn" onclick="app.requestWithdraw()">Withdraw Taka</button>
+        </div>
+    </div>
+
+    <!-- PROFILE/VIP -->
+    <div id="scr-profile" class="screen">
+        <div class="card" style="text-align:center;">
+            <h3 id="prof-name">User</h3>
+            <p id="prof-phone" style="font-size: 0.8rem; opacity: 0.6;"></p>
+            <div id="expiry-box" style="margin-top:5px;"></div>
+        </div>
+        
+        <h3>Upgrade VIP (30 Days Validity)</h3>
+        <div id="vip-list"></div>
+        <button class="btn" style="background:#ff4757" onclick="app.logout()">Logout</button>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="app.nav('home', this)"><i class="fas fa-home"></i><span>Home</span></div>
+        <div class="nav-item" onclick="app.nav('task', this)"><i class="fas fa-tasks"></i><span>Tasks</span></div>
+        <div class="nav-item" onclick="app.nav('games', this)"><i class="fas fa-gamepad"></i><span>Games</span></div>
+        <div class="nav-item" onclick="app.nav('wallet', this)"><i class="fas fa-wallet"></i><span>Wallet</span></div>
+        <div class="nav-item" onclick="app.nav('profile', this)"><i class="fas fa-user-circle"></i><span>VIP</span></div>
+    </nav>
+</div>
+
+<script>
+const app = {
+    payNumbers: { bkash: "01606287039", nagad: "01826191236" },
+    
+    db: JSON.parse(localStorage.getItem('C2K_VIP_PRO_DB')) || {
+        isLoggedIn: false,
+        name: "", phone: "", balance: 0,
+        vip: 0, vipExpiry: null,
+        id: Math.floor(Math.random() * 90000) + 10000,
+        tasksDone: [],
+        lastSpin: 0,
+        currentTaskPart: 1
+    },
+
+    init: function() {
+        this.checkVipExpiry();
+        if(this.db.isLoggedIn) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            this.updateUI();
+            this.renderVIPs();
+            this.renderTasks();
+        }
+    },
+
+    login: function() {
+        const name = document.getElementById('log-name').value;
+        const phone = document.getElementById('log-phone').value;
+        if(name.length < 3 || phone.length < 11) return Swal.fire('Error', 'Invalid info!', 'error');
+        this.db.name = name; this.db.phone = phone; this.db.isLoggedIn = true;
+        this.save(); this.init();
+    },
+
+    save: function() {
+        localStorage.setItem('C2K_VIP_PRO_DB', JSON.stringify(this.db));
+        this.updateUI();
+    },
+
+    checkVipExpiry: function() {
+        if (this.db.vip > 0 && this.db.vipExpiry) {
+            if (Date.now() > this.db.vipExpiry) {
+                this.db.vip = 0;
+                this.db.vipExpiry = null;
+                this.save();
+                Swal.fire('Expired', 'Your VIP validity has ended!', 'warning');
+            }
+        }
+    },
+
+    updateUI: function() {
+        document.getElementById('user-balance').innerText = Math.floor(this.db.balance);
+        document.getElementById('prof-name').innerText = this.db.name;
+        document.getElementById('prof-phone').innerText = this.db.phone;
+        document.getElementById('ref-code-display').innerText = this.db.id;
+        
+        const vBadge = document.getElementById('header-vip');
+        vBadge.innerText = this.db.vip > 0 ? "VIP " + this.db.vip : "BASIC";
+        vBadge.className = "vip-badge v" + this.db.vip;
+
+        const expiryBox = document.getElementById('expiry-box');
+        if(this.db.vip > 0 && this.db.vipExpiry) {
+            const daysLeft = Math.ceil((this.db.vipExpiry - Date.now()) / (1000 * 60 * 60 * 24));
+            expiryBox.innerHTML = `<span class="expiry-text">Validity: ${daysLeft} Days Left</span>`;
+        } else {
+            expiryBox.innerHTML = "";
+        }
+
+        // VIP হলে ২০০ কাজ, না হলে ৩০ কাজ
+        const limit = this.db.vip > 0 ? 200 : 30;
+        document.getElementById('task-count').innerText = `${this.db.tasksDone.length}/${limit} Done`;
+    },
+
+    nav: function(scr, el) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById('scr-' + scr).classList.add('active-screen');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(el.classList.contains('nav-item')) el.classList.add('active');
+    },
+
+    getReward: function() {
+        const rewards = { 0:2, 1:10, 2:25, 3:50, 4:100, 5:150, 6:250, 7:400, 8:1000 };
+        return rewards[this.db.vip] || 2;
+    },
+
+    renderTasks: function() {
+        const container = document.getElementById('task-container');
+        const nav = document.getElementById('task-sections-nav');
+        container.innerHTML = ""; nav.innerHTML = "";
+        
+        // লিমিট সেট করা হচ্ছে
+        let totalLimit = this.db.vip > 0 ? 200 : 30;
+        let parts = this.db.vip > 0 ? 4 : 1; 
+        let perPart = totalLimit / parts;
+        
+        if(this.db.vip > 0) {
+            for(let p=1; p<=parts; p++) nav.innerHTML += `<button class="btn btn-sm ${this.db.currentTaskPart == p ? '' : 'v2'}" onclick="app.setPart(${p})">Part ${p}</button>`;
+        }
+        let start = (this.db.currentTaskPart - 1) * perPart + 1;
+        let end = this.db.currentTaskPart * perPart;
+        for(let i=start; i<=end; i++) {
+            const isDone = this.db.tasksDone.includes(i);
+            container.innerHTML += `<div class="task-card ${isDone ? 'completed' : ''}"><p>Task #${i}</p><b>৳ ${this.getReward()}</b><button class="btn btn-sm" onclick="app.doTask(${i})">${isDone ? 'Done' : 'Start'}</button></div>`;
+        }
+    },
+
+    setPart: function(p) { this.db.currentTaskPart = p; this.renderTasks(); },
+
+    doTask: function(id) {
+        // টাস্ক লিমিট চেক
+        let totalLimit = this.db.vip > 0 ? 200 : 30;
+        if(this.db.tasksDone.length >= totalLimit) return Swal.fire('Limit Over', 'আজকের কাজের লিমিট শেষ!', 'warning');
+
+        Swal.fire({ title: 'Loading Ad...', timer: 3000, showConfirmButton: false, didOpen: () => Swal.showLoading() }).then(() => {
+            this.db.balance += this.getReward();
+            this.db.tasksDone.push(id);
+            this.save(); this.renderTasks();
+            Swal.fire('Success', 'Money Added!', 'success');
+        });
+    },
+
+    renderVIPs: function() {
+        const vips = [
+            { lv: 1, price: 500, info: "৳10/Task" },
+            { lv: 2, price: 1000, info: "৳25/Task" },
+            { lv: 3, price: 2000, info: "৳50/Task" },
+            { lv: 8, price: 15000, info: "৳1000/Task" }
+        ];
+        document.getElementById('vip-list').innerHTML = vips.map(v => `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between;"><b>VIP Level ${v.lv}</b><span class="vip-badge v${v.lv}">৳ ${v.price}</span></div>
+                <p style="font-size:0.7rem;">${v.info} | Valid for 30 Days</p>
+                <button class="btn" onclick="app.buyVIPModal(${v.lv}, ${v.price})">Upgrade</button>
+            </div>`).join('');
+    },
+
+    buyVIPModal: function(lv, price) {
+        Swal.fire({
+            title: `Upgrade VIP ${lv}`,
+            text: `Send ৳${price} to ${this.payNumbers.bkash} and enter TRX ID.`,
+            input: 'text', inputPlaceholder: 'Transaction ID'
+        }).then((res) => {
+            if(res.value) {
+                const expiry = new Date();
+                expiry.setDate(expiry.getDate() + 30); // 30 Days Validity
+                this.db.vip = lv;
+                this.db.vipExpiry = expiry.getTime();
+                this.db.tasksDone = [];
+                this.save(); this.renderTasks();
+                Swal.fire('Success', 'VIP Active for 30 Days!', 'success');
+            }
+        });
+    },
+
+    spinWheel: function() {
+        const now = Date.now();
+        if(now - this.db.lastSpin < 60000) return Swal.fire('Wait', '1 min delay', 'warning');
+        document.getElementById('wheel').style.transform = `rotate(${Math.floor(Math.random() * 360) + 720}deg)`;
+        setTimeout(() => {
+            const win = Math.floor(Math.random() * 10) + 2;
+            this.db.balance += win; this.db.lastSpin = Date.now(); this.save();
+            Swal.fire('Won', `৳ ${win}`, 'success');
+        }, 3000);
+    },
+
+    claimDaily: function() {
+        const today = new Date().toDateString();
+        if(this.db.lastDaily === today) return Swal.fire('Error', 'Already done!', 'error');
+        this.db.balance += (this.db.vip > 0 ? 50 : 10);
+        this.db.lastDaily = today; this.save(); Swal.fire('Success', 'Bonus Added!', 'success');
+    },
+
+    requestWithdraw: function() {
+        const amt = parseInt(document.getElementById('wd-amount').value);
+        if(!amt || amt < 500) return Swal.fire('Error', 'Min 500!', 'error');
+        if(amt > this.db.balance) return Swal.fire('Error', 'No balance!', 'error');
+        this.db.balance -= amt; this.save(); Swal.fire('Success', 'Pending!', 'success');
+    },
+
+    logout: function() { localStorage.clear(); location.reload(); }
+};
+app.init();
+</script>
+</body>
+</html>
